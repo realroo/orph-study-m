@@ -12,11 +12,24 @@ import { CurrentAffairsSection } from './components/CurrentAffairsSection';
 import { CustomDrillModal } from './components/CustomDrillModal';
 import { BookmarksDrawer } from './components/BookmarksDrawer';
 import { Footer } from './components/Footer';
+import { useAuth } from './context/AuthContext';
+import { AuthModal } from './components/Auth/AuthModal';
+import { ProtectedRoute } from './components/Auth/ProtectedRoute';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<'catalog' | 'pyq' | 'current_affairs' | 'analytics' | 'bookmarks'>('catalog');
   const [searchQuery, setSearchQuery] = useState('');
   
+  // Authentication Context
+  const { 
+    isSignedIn, 
+    authModalOpen, 
+    authModalMode, 
+    openAuthModal, 
+    closeAuthModal,
+    pendingRedirectAction
+  } = useAuth();
+
   // Active Test Simulator state
   const [activePaperForTest, setActivePaperForTest] = useState<ExamPaper | null>(null);
   const [latestResult, setLatestResult] = useState<TestResult | null>(null);
@@ -55,7 +68,12 @@ export default function App() {
     setBookmarkedQuestions((prev) => prev.filter((q) => q.id !== questionId));
   };
 
+  // Protected Test Launchers
   const handleStartPaper = (paper: ExamPaper) => {
+    if (!isSignedIn) {
+      openAuthModal('signin', () => setActivePaperForTest(paper));
+      return;
+    }
     setActivePaperForTest(paper);
   };
 
@@ -66,16 +84,16 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Quick Start Free SBI PO Mock
+  // Quick Start Free SBI PO Mock (Protected)
   const handleStartQuickMock = () => {
     const sbi = mockExamSeries.find((s) => s.id === 'sbi-po');
     const freeMock = sbi?.papers.find((p) => p.isFree) || sbi?.papers[0];
     if (freeMock) {
-      setActivePaperForTest(freeMock);
+      handleStartPaper(freeMock);
     }
   };
 
-  // Launch test from Bookmarks
+  // Launch test from Bookmarks (Protected)
   const handleStartBookmarkDrill = (questions: Question[]) => {
     const bookmarkPaper: ExamPaper = {
       id: `bookmark-drill-${Date.now()}`,
@@ -102,17 +120,19 @@ export default function App() {
       questions: questions.map((q, idx) => ({ ...q, questionNumber: idx + 1 }))
     };
 
-    setActivePaperForTest(bookmarkPaper);
+    handleStartPaper(bookmarkPaper);
   };
 
-  // If Test Simulator is running, render full-screen TCS iON environment!
+  // Protected Exam Simulator: unauthenticated users cannot enter without logging in
   if (activePaperForTest) {
     return (
-      <ExamSimulator
-        paper={activePaperForTest}
-        onFinishTest={handleFinishTest}
-        onExitTest={() => setActivePaperForTest(null)}
-      />
+      <ProtectedRoute onAuthenticateRedirect={() => openAuthModal('signin')}>
+        <ExamSimulator
+          paper={activePaperForTest}
+          onFinishTest={handleFinishTest}
+          onExitTest={() => setActivePaperForTest(null)}
+        />
+      </ProtectedRoute>
     );
   }
 
@@ -122,7 +142,13 @@ export default function App() {
       <Navbar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        onOpenCustomDrill={() => setIsCustomDrillOpen(true)}
+        onOpenCustomDrill={() => {
+          if (!isSignedIn) {
+            openAuthModal('signin', () => setIsCustomDrillOpen(true));
+            return;
+          }
+          setIsCustomDrillOpen(true);
+        }}
         onStartQuickMock={handleStartQuickMock}
         hasRecentResult={latestResult !== null}
         bookmarkCount={bookmarkedQuestions.length}
@@ -180,7 +206,7 @@ export default function App() {
               const p = mockExamSeries
                 .flatMap((s) => s.papers)
                 .find((p) => p.id === latestResult.paperId);
-              if (p) setActivePaperForTest(p);
+              if (p) handleStartPaper(p);
             }}
             onBackToCatalog={() => setActiveTab('catalog')}
             onToggleBookmark={handleToggleBookmark}
@@ -217,6 +243,18 @@ export default function App() {
         onClose={() => setIsCustomDrillOpen(false)}
         onLaunchDrill={handleStartPaper}
         allAvailableQuestions={allQuestions}
+      />
+
+      {/* Clerk Login & Signup with 6-Digit Email OTP Modal */}
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={closeAuthModal}
+        initialMode={authModalMode}
+        onSuccess={() => {
+          if (pendingRedirectAction) {
+            pendingRedirectAction();
+          }
+        }}
       />
     </div>
   );
