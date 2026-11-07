@@ -1,0 +1,6 @@
+{
+  "name": "MockMaster Pro - Complete Competitive Exam Mock Tests & PYQs",
+  "description": "The premier mock test platform for Banking, SSC, Railways, Regulatory Bodies & State Exams with exact TCS iON exam simulation, previous year papers, and in-depth performance analytics.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <script>
+      (function() {
+        try {
+          var currentFetch = window.fetch;
+          Object.defineProperty(window, 'fetch', {
+            get: function() {
+              return currentFetch;
+            },
+            set: function(fn) {
+              currentFetch = fn;
+            },
+            configurable: true,
+            enumerable: true
+          });
+        } catch (err) {
+          // Ignore if cannot redefine
+        }
+      })();
+    </script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MockMaster Pro - Complete Competitive Exam Mock Tests &amp; PYQs</title>
+    <meta name="description" content="The premier mock test platform for Banking, SSC, Railways, Regulatory Bodies &amp; State Exams with exact TCS iON exam simulation, previous year papers, and in-depth performance analytics." />
+    <meta property="og:title" content="MockMaster Pro - Complete Competitive Exam Mock Tests &amp; PYQs" />
+    <meta property="og:description" content="The premier mock test platform for Banking, SSC, Railways, Regulatory Bodies &amp; State Exams with exact TCS iON exam simulation, previous year papers, and in-depth performance analytics." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  </head>
+  <body class="font-sans antialiased text-slate-800 bg-slate-50 selection:bg-emerald-500/20 selection:text-emerald-900">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+
